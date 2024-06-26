@@ -342,31 +342,31 @@ extension OperationQueue {
 
 extension Optional: OptionalDecoding {}
 
-func encode(_ value: some Encodable, using encoder: JSONEncoder) async throws -> Data? {
-    if let data = value as? Data {
+func encode(_ proxy: SendableProxy<any Encodable>, using encoder: JSONEncoder) async throws -> Data? {
+    if let data = proxy.value as? Data {
         return data
-    } else if let string = value as? String {
+    } else if let string = proxy.value as? String {
         return string.data(using: .utf8)
     } else {
         return try await Task.detached {
-            try encoder.encode(value)
+            try encoder.encode(proxy.value)
         }.value
     }
 }
 
-func decode<T: Decodable>(_ data: Data, using decoder: JSONDecoder) async throws -> T {
+func decode<T: Decodable>(_ data: Data, using decoder: JSONDecoder) async throws -> SendableProxy<T> {
     if data.isEmpty, T.self is OptionalDecoding.Type {
-        return Optional<Decodable>.none as! T
+        return SendableProxy(Optional<Decodable>.none as! T)
     } else if T.self == Data.self {
-        return data as! T
+        return SendableProxy(data as! T)
     } else if T.self == String.self {
         guard let string = String(data: data, encoding: .utf8) else {
             throw URLError(.badServerResponse)
         }
-        return string as! T
+        return SendableProxy(string as! T)
     } else {
         return try await Task.detached {
-            try decoder.decode(T.self, from: data)
+            SendableProxy(try decoder.decode(T.self, from: data))
         }.value
     }
 }
@@ -389,5 +389,14 @@ private final class TaskHandlersDictionary {
             defer { lock.unlock() }
             handlers[task] = newValue
         }
+    }
+}
+
+/// A simple wrapper around a value that makes it conform to `Sendable`.
+struct SendableProxy<T>: @unchecked Sendable {
+    let value: T
+
+    init(_ value: T) {
+        self.value = value
     }
 }

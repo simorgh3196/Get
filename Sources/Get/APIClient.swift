@@ -105,7 +105,7 @@ public actor APIClient {
     ) async throws -> Response<T> {
         let response = try await data(for: request, delegate: delegate, configure: configure)
         let decoder = self.delegate.client(self, decoderForRequest: request) ?? self.decoder
-        let value: T = try await decode(response.data, using: decoder)
+        let value: T = try await decode(response.data, using: decoder).value
         return response.map { _ in value }
     }
 
@@ -148,11 +148,11 @@ public actor APIClient {
             do {
                 let response = try await dataLoader.startDataTask(task, session: session, delegate: delegate)
                 try validate(response)
-                return response
+                return SendableProxy(response)
             } catch {
                 throw DataLoaderError(task: task, error: error)
             }
-        }
+        }.value
     }
 
 #if !os(Linux)
@@ -223,7 +223,7 @@ public actor APIClient {
     ) async throws -> Response<T> {
         let response = try await _upload(for: request, fromFile: fileURL, delegate: delegate, configure: configure)
         let decoder = self.delegate.client(self, decoderForRequest: request) ?? self.decoder
-        let value: T = try await decode(response.data, using: decoder)
+        let value: T = try await decode(response.data, using: decoder).value
         return response.map { _ in value }
     }
 
@@ -259,11 +259,11 @@ public actor APIClient {
             do {
                 let response = try await dataLoader.startUploadTask(task, session: session, delegate: delegate)
                 try validate(response)
-                return response
+                return SendableProxy(response)
             } catch {
                 throw DataLoaderError(task: task, error: error)
             }
-        }
+        }.value
     }
 
     // MARK: Upload Data
@@ -286,7 +286,7 @@ public actor APIClient {
     ) async throws -> Response<T> {
         let response = try await _upload(for: request, from: data, delegate: delegate, configure: configure)
         let decoder = self.delegate.client(self, decoderForRequest: request) ?? self.decoder
-        let value: T = try await decode(response.data, using: decoder)
+        let value: T = try await decode(response.data, using: decoder).value
         return response.map { _ in value }
     }
 
@@ -322,11 +322,11 @@ public actor APIClient {
             do {
                 let response = try await dataLoader.startUploadTask(task, session: session, delegate: delegate)
                 try validate(response)
-                return response
+                return SendableProxy(response)
             } catch {
                 throw DataLoaderError(task: task, error: error)
             }
-        }
+        }.value
     }
 
     // MARK: Making Requests
@@ -346,7 +346,7 @@ public actor APIClient {
         urlRequest.httpMethod = request.method.rawValue
         if let body = request.body {
             let encoder = delegate.client(self, encoderForRequest: request) ?? self.encoder
-            urlRequest.httpBody = try await encode(body, using: encoder)
+            urlRequest.httpBody = try await encode(SendableProxy(body), using: encoder)
             if urlRequest.value(forHTTPHeaderField: "Content-Type") == nil &&
                 session.configuration.httpAdditionalHeaders?["Content-Type"] == nil {
                 urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -386,7 +386,7 @@ public actor APIClient {
 
     // MARK: Helpers
 
-    private func performRequest<T>(attempts: Int = 1, send: () async throws -> T) async throws -> T {
+    private func performRequest<T>(attempts: Int = 1, send: () async throws -> SendableProxy<T>) async throws -> SendableProxy<T> {
         do {
             return try await send()
         } catch {
