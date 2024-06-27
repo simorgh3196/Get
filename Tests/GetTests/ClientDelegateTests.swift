@@ -15,7 +15,7 @@ final class ClientDelegateTests: XCTestCase {
     // Addresses https://github.com/kean/Get/issues/35
     func testOverridingQueryItemsEncoding() async throws {
         // GIVEN
-        class ClientDelegate: APIClientDelegate {
+        final class ClientDelegate: APIClientDelegate {
             func client<T>(_ client: APIClient, makeURLForRequest request: Request<T>) throws -> URL? {
                 var components = URLComponents(url: client.configuration.baseURL!.appendingPathComponent(request.url!.absoluteString), resolvingAgainstBaseURL: false)!
                 if let query = request.query, !query.isEmpty {

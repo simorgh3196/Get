@@ -22,7 +22,7 @@ final class APIClientAuthorizationTests: XCTestCase {
 
     func testAuthorizationHeaderWidhValidToken() async throws {
         // GIVEN
-        delegate.token = Token(value: "valid-token", expiresDate: Date(timeIntervalSinceNow: 1000))
+        await delegate.updateToken(Token(value: "valid-token", expiresDate: Date(timeIntervalSinceNow: 1000)))
         let url = URL(string: "https://api.github.com/user")!
         var mock = Mock.get(url: url, json: "user")
         mock.onRequest = { request, _ in
@@ -36,7 +36,7 @@ final class APIClientAuthorizationTests: XCTestCase {
 
     func testAuthorizationHeaderWithExpiredToken() async throws {
         // GIVEN
-        delegate.token = Token(value: "expired-token", expiresDate: Date(timeIntervalSinceNow: -1000))
+        await delegate.updateToken(Token(value: "expired-token", expiresDate: Date(timeIntervalSinceNow: -1000)))
         let url = URL(string: "https://api.github.com/user")!
         var mock = Mock.get(url: url, json: "user")
         mock.onRequest = { request, _ in
@@ -50,7 +50,7 @@ final class APIClientAuthorizationTests: XCTestCase {
 
     func testAuthorizationHeaderWithInvalidToken() async throws {
         // GIVEN
-        delegate.token = Token(value: "invalid-token", expiresDate: Date(timeIntervalSinceNow: 1000))
+        await delegate.updateToken(Token(value: "invalid-token", expiresDate: Date(timeIntervalSinceNow: 1000)))
         let url = URL(string: "https://api.github.com/user")!
         var mock = Mock(url: url, dataType: .json, statusCode: 401, data: [
             .get: "Unauthorized".data(using: .utf8)!
@@ -74,7 +74,7 @@ final class APIClientAuthorizationTests: XCTestCase {
         // GIVEN
         struct WillSendFailed: Error {}
 
-        class MockFailingDelegate: APIClientDelegate {
+        final class MockFailingDelegate: APIClientDelegate {
             func client(_ client: APIClient, willSendRequest request: inout URLRequest) async throws {
                 throw WillSendFailed()
             }
@@ -99,9 +99,13 @@ final class APIClientAuthorizationTests: XCTestCase {
     }
 }
 
-private final class MockAuthorizingDelegate: APIClientDelegate {
-    var token: Token!
-    let tokenRefresher = TokenRefresher()
+private actor MockAuthorizingDelegate: APIClientDelegate {
+    private var token: Token!
+    private let tokenRefresher = TokenRefresher()
+
+    func updateToken(_ token: Token) async {
+        self.token = token
+    }
 
     func client(_ client: APIClient, willSendRequest request: inout URLRequest) async throws {
         let now = Date()

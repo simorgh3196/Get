@@ -10,7 +10,7 @@ import FoundationNetworking
 #endif
 
 func checkSample01() {
-    final class ClientDelegate: APIClientDelegate {
+    actor ClientDelegate: APIClientDelegate {
         private var accessToken: String = ""
 
         func client(_ client: APIClient, willSendRequest request: inout URLRequest) async throws {
