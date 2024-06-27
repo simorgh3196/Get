@@ -28,10 +28,10 @@ final class DataLoader: NSObject, URLSessionDataDelegate, URLSessionDownloadDele
         return url
     }()
 
-    func startDataTask(_ task: URLSessionDataTask, session: URLSession, delegate: URLSessionDataDelegate?) async throws -> Response<Data> {
+    func startDataTask(_ task: URLSessionDataTask, session: URLSession, delegateProxy: SendableProxy<URLSessionDataDelegate?>) async throws -> Response<Data> {
         try await withTaskCancellationHandler(operation: {
             try await withUnsafeThrowingContinuation { continuation in
-                let handler = DataTaskHandler(delegate: delegate)
+                let handler = DataTaskHandler(delegate: delegateProxy.value)
                 handler.completion = continuation.resume(with:)
                 self.handlers[task] = handler
 
@@ -42,10 +42,10 @@ final class DataLoader: NSObject, URLSessionDataDelegate, URLSessionDownloadDele
         })
     }
 
-    func startDownloadTask(_ task: URLSessionDownloadTask, session: URLSession, delegate: URLSessionDownloadDelegate?) async throws -> Response<URL> {
+    func startDownloadTask(_ task: URLSessionDownloadTask, session: URLSession, delegateProxy: SendableProxy<URLSessionDownloadDelegate?>) async throws -> Response<URL> {
         try await withTaskCancellationHandler(operation: {
             try await withUnsafeThrowingContinuation { continuation in
-                let handler = DownloadTaskHandler(delegate: delegate)
+                let handler = DownloadTaskHandler(delegate: delegateProxy.value)
                 handler.completion = continuation.resume(with:)
                 self.handlers[task] = handler
 
@@ -56,10 +56,10 @@ final class DataLoader: NSObject, URLSessionDataDelegate, URLSessionDownloadDele
         })
     }
 
-    func startUploadTask(_ task: URLSessionUploadTask, session: URLSession, delegate: URLSessionTaskDelegate?) async throws -> Response<Data> {
+    func startUploadTask(_ task: URLSessionUploadTask, session: URLSession, delegateProxy: SendableProxy<URLSessionTaskDelegate?>) async throws -> Response<Data> {
         try await withTaskCancellationHandler(operation: {
             try await withUnsafeThrowingContinuation { continuation in
-                let handler = DataTaskHandler(delegate: delegate)
+                let handler = DataTaskHandler(delegate: delegateProxy.value)
                 handler.completion = continuation.resume(with:)
                 self.handlers[task] = handler
 

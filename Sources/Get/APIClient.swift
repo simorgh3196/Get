@@ -146,7 +146,7 @@ public actor APIClient {
             try await self.delegate.client(self, willSendRequest: &request)
             let task = session.dataTask(with: request)
             do {
-                let response = try await dataLoader.startDataTask(task, session: session, delegate: delegate)
+                let response = try await dataLoader.startDataTask(task, session: session, delegateProxy: SendableProxy(delegate))
                 try validate(response)
                 return SendableProxy(response)
             } catch {
@@ -196,7 +196,7 @@ public actor APIClient {
         _ task: URLSessionDownloadTask,
         delegate: URLSessionDownloadDelegate?
     ) async throws -> Response<URL> {
-        let response = try await dataLoader.startDownloadTask(task, session: session, delegate: delegate)
+        let response = try await dataLoader.startDownloadTask(task, session: session, delegateProxy: SendableProxy(delegate))
         try validate(response)
         return response
     }
@@ -257,7 +257,7 @@ public actor APIClient {
             try await self.delegate.client(self, willSendRequest: &request)
             let task = session.uploadTask(with: request, fromFile: fileURL)
             do {
-                let response = try await dataLoader.startUploadTask(task, session: session, delegate: delegate)
+                let response = try await dataLoader.startUploadTask(task, session: session, delegateProxy: SendableProxy(delegate))
                 try validate(response)
                 return SendableProxy(response)
             } catch {
@@ -320,7 +320,7 @@ public actor APIClient {
             try await self.delegate.client(self, willSendRequest: &request)
             let task = session.uploadTask(with: request, from: data)
             do {
-                let response = try await dataLoader.startUploadTask(task, session: session, delegate: delegate)
+                let response = try await dataLoader.startUploadTask(task, session: session, delegateProxy: SendableProxy(delegate))
                 try validate(response)
                 return SendableProxy(response)
             } catch {
