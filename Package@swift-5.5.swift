@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:5.5
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -10,12 +10,7 @@ let package = Package(
         .library(name: "Get", targets: ["Get"])
     ],
     targets: [
-        .target(
-            name: "Get",
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency", .when(configuration: .debug))
-            ]
-        ),
+        .target(name: "Get"),
         .testTarget(name: "GetTests", dependencies: ["Get"], resources: [.process("Resources")])
     ]
 )
