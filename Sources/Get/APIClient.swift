@@ -101,7 +101,7 @@ public actor APIClient {
     @discardableResult public func send<T: Decodable>(
         _ request: Request<T>,
         delegate: URLSessionDataDelegate? = nil,
-        configure: ((inout URLRequest) throws -> Void)? = nil
+        configure: (@Sendable (inout URLRequest) throws -> Void)? = nil
     ) async throws -> Response<T> {
         let response = try await data(for: request, delegate: delegate, configure: configure)
         let decoder = self.delegate.client(self, decoderForRequest: request) ?? self.decoder
@@ -120,7 +120,7 @@ public actor APIClient {
     @discardableResult public func send(
         _ request: Request<Void>,
         delegate: URLSessionDataDelegate? = nil,
-        configure: ((inout URLRequest) throws -> Void)? = nil
+        configure: (@Sendable (inout URLRequest) throws -> Void)? = nil
     ) async throws -> Response<Void> {
         try await data(for: request, delegate: delegate, configure: configure).map { _ in () }
     }
@@ -138,7 +138,7 @@ public actor APIClient {
     public func data<T>(
         for request: Request<T>,
         delegate: URLSessionDataDelegate? = nil,
-        configure: ((inout URLRequest) throws -> Void)? = nil
+        configure: (@Sendable (inout URLRequest) throws -> Void)? = nil
     ) async throws -> Response<Data> {
         let request = try await makeURLRequest(for: request, configure)
         return try await performRequest {
@@ -172,7 +172,7 @@ public actor APIClient {
     public func download<T>(
         for request: Request<T>,
         delegate: URLSessionDownloadDelegate? = nil,
-        configure: ((inout URLRequest) throws -> Void)? = nil
+        configure: (@Sendable (inout URLRequest) throws -> Void)? = nil
     ) async throws -> Response<URL> {
         var urlRequest = try await makeURLRequest(for: request, configure)
         try await self.delegate.client(self, willSendRequest: &urlRequest)
@@ -219,7 +219,7 @@ public actor APIClient {
         for request: Request<T>,
         fromFile fileURL: URL,
         delegate: URLSessionTaskDelegate? = nil,
-        configure: ((inout URLRequest) throws -> Void)? = nil
+        configure: (@Sendable (inout URLRequest) throws -> Void)? = nil
     ) async throws -> Response<T> {
         let response = try await _upload(for: request, fromFile: fileURL, delegate: delegate, configure: configure)
         let decoder = self.delegate.client(self, decoderForRequest: request) ?? self.decoder
@@ -240,7 +240,7 @@ public actor APIClient {
         for request: Request<Void>,
         fromFile fileURL: URL,
         delegate: URLSessionTaskDelegate? = nil,
-        configure: ((inout URLRequest) throws -> Void)? = nil
+        configure: (@Sendable (inout URLRequest) throws -> Void)? = nil
     ) async throws -> Response<Void> {
         try await _upload(for: request, fromFile: fileURL, delegate: delegate, configure: configure).map { _ in () }
     }
@@ -249,7 +249,7 @@ public actor APIClient {
         for request: Request<T>,
         fromFile fileURL: URL,
         delegate: URLSessionTaskDelegate?,
-        configure: ((inout URLRequest) throws -> Void)?
+        configure: (@Sendable (inout URLRequest) throws -> Void)?
     ) async throws -> Response<Data> {
         let request = try await makeURLRequest(for: request, configure)
         return try await performRequest {
@@ -282,7 +282,7 @@ public actor APIClient {
         for request: Request<T>,
         from data: Data,
         delegate: URLSessionTaskDelegate? = nil,
-        configure: ((inout URLRequest) throws -> Void)? = nil
+        configure: (@Sendable (inout URLRequest) throws -> Void)? = nil
     ) async throws -> Response<T> {
         let response = try await _upload(for: request, from: data, delegate: delegate, configure: configure)
         let decoder = self.delegate.client(self, decoderForRequest: request) ?? self.decoder
@@ -303,7 +303,7 @@ public actor APIClient {
         for request: Request<Void>,
         from data: Data,
         delegate: URLSessionTaskDelegate? = nil,
-        configure: ((inout URLRequest) throws -> Void)? = nil
+        configure: (@Sendable (inout URLRequest) throws -> Void)? = nil
     ) async throws -> Response<Void> {
         try await _upload(for: request, from: data, delegate: delegate, configure: configure).map { _ in () }
     }
@@ -312,7 +312,7 @@ public actor APIClient {
         for request: Request<T>,
         from data: Data,
         delegate: URLSessionTaskDelegate?,
-        configure: ((inout URLRequest) throws -> Void)?
+        configure: (@Sendable (inout URLRequest) throws -> Void)?
     ) async throws -> Response<Data> {
         let request = try await makeURLRequest(for: request, configure)
         return try await performRequest {
@@ -338,7 +338,7 @@ public actor APIClient {
 
     private func makeURLRequest<T>(
         for request: Request<T>,
-        _ configure: ((inout URLRequest) throws -> Void)?
+        _ configure: (@Sendable (inout URLRequest) throws -> Void)?
     ) async throws -> URLRequest {
         let url = try makeURL(for: request)
         var urlRequest = URLRequest(url: url)
